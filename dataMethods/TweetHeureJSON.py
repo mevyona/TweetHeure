@@ -222,19 +222,19 @@ class AppCmd(App):
             try:
                 self.displayMenu(stdscr)
                 key = stdscr.getch()
-                if key == ord('s'):
+                if key == ord('s') or key == ord('S'):
                     self.signUpMenu(stdscr)
-                elif key == ord('l'):
+                elif key == ord('l') or key == ord('L'):
                     self.loginMenu(stdscr)
-                elif key == ord('c'):
+                elif key == ord('c') or key == ord('C'):
                     self.createPostMenu(stdscr)
-                elif key == ord('r'):
+                elif key == ord('r') or key == ord('R'):
                     self.viewRandomPostMenu(stdscr)
-                elif key == ord('m'):
+                elif key == ord('m') or key == ord('M'):
                     self.commentMenu(stdscr)
-                elif key == ord('o'):
+                elif key == ord('o') or key == ord('O'):
                     self.logOut()
-                elif key == ord('e'):
+                elif key == ord('e') or key == ord('E'):
                     break
             except curses.error:
                 continue
