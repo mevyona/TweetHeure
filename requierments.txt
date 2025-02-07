@@ -1,0 +1,3 @@
+pyfiglet
+curses
+windows-curses  # uniquement pour Windows
