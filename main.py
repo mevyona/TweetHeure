@@ -6,7 +6,6 @@ import re
 import os
 import bcrypt
 import json
-import sys
 
 class TweetHeureApp:
     def __init__(self, stdscr):
