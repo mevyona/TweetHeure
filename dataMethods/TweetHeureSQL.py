@@ -3,6 +3,17 @@ import curses
 import pyfiglet
 import curses.ascii
 import re
+import os
+import bcrypt
+
+import os
+
+import os
+import sqlite3
+import curses
+import pyfiglet
+import curses.ascii
+import re
 import bcrypt
 
 class TweetHeureApp:
@@ -15,9 +26,10 @@ class TweetHeureApp:
         self.createTables()
         curses.curs_set(0)
         self.stdscr.keypad(True)
+        self.loadSession()
 
     def createTables(self):
-        self.cursor.executescript("""
+        self.cursor.executescript(""" 
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -43,6 +55,22 @@ class TweetHeureApp:
         );
         """)
         self.conn.commit()
+
+    def loadSession(self):
+        session_file = '.session'
+        if os.path.exists(session_file):
+            with open(session_file, 'r') as f:
+                user_id = f.read().strip()
+                if user_id:
+                    self.cursor.execute("SELECT id, name FROM users WHERE id = ?", (user_id,))
+                    user = self.cursor.fetchone()
+                    if user:
+                        self.currentUser = user
+                        print(f"Utilisateur connecté : {user[1]}")
+
+    def saveSession(self, user_id):
+        with open('.session', 'w') as f:
+            f.write(str(user_id))
 
     def safeAddStr(self, text):
         try:
@@ -176,6 +204,7 @@ class UserManagement:
 
         if user and self.verifyPassword(password, user[2]):
             self.app.currentUser = (user[0], user[1])
+            self.app.saveSession(user[0])
             self.app.displayMessage(f"✅ Connecté en tant que {user[1]}")
         else:
             self.app.displayMessage("❌ Identifiants incorrects.")
@@ -186,10 +215,19 @@ class UserManagement:
         if self.app.currentUser:
             self.app.displayMessage(f"👋 Au revoir {self.app.currentUser[1]} !")
             self.app.currentUser = None
+            os.remove('.session')
         else:
             self.app.displayMessage("⚠️ Vous n'êtes pas connecté.")
         self.app.stdscr.refresh()
         self.app.stdscr.getch()
+
+
+def main(stdscr):
+    app = TweetHeureApp(stdscr)
+    app.run()
+
+if __name__ == "__main__":
+    curses.wrapper(main)
 
 class PostManagement:
     def __init__(self, app):
