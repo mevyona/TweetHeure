@@ -9,6 +9,7 @@ import json
 
 class TweetHeureApp:
     def __init__(self, stdscr):
+        # Initialisation de l'application
         self.stdscr = stdscr
         self.storage_mode = self.getStorageMode()
         self.currentUser = None
@@ -196,6 +197,7 @@ class TweetHeureApp:
 
 class UserManagement:
     def __init__(self, app):
+        # Initialisation de la gestion des utilisateurs
         self.app = app
 
     def isValidEmail(self, email):
@@ -283,6 +285,7 @@ class UserManagement:
 
 class PostManagement:
     def __init__(self, app):
+        # Initialisation de la gestion des posts
         self.app = app
 
     def addPost(self):
@@ -352,6 +355,7 @@ class PostManagement:
 
 class CommentManagement:
     def __init__(self, app):
+        # Initialisation de la gestion des commentaires
         self.app = app
 
     def addComment(self):
