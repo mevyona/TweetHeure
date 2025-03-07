@@ -129,8 +129,6 @@ class TweetHeureApp:
             except curses.error:
                 continue
 
-import bcrypt
-
 class UserManagement:
     def __init__(self, app):
         self.app = app
@@ -140,11 +138,11 @@ class UserManagement:
         return re.match(emailPattern, email) and not re.search(r'[À-ÿ]', email)
 
     def hashPassword(self, password):
-        salt = bcrypt.gensalt()  # Génère un salt sécurisé
-        return bcrypt.hashpw(password.encode(), salt)  # Hashage sécurisé du mot de passe
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode(), salt)
 
     def verifyPassword(self, password, hashedPassword):
-        return bcrypt.checkpw(password.encode(), hashedPassword)  # Vérifie si le mot de passe correspond
+        return bcrypt.checkpw(password.encode(), hashedPassword)
 
     def createAccount(self):
         self.app.stdscr.clear()
@@ -156,7 +154,7 @@ class UserManagement:
             return self.createAccount()
 
         password = self.app.getInput("Entrez votre mot de passe : ")
-        hashedPassword = self.hashPassword(password)  # Hashage du mot de passe
+        hashedPassword = self.hashPassword(password)
 
         try:
             self.app.cursor.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
@@ -176,8 +174,8 @@ class UserManagement:
         self.app.cursor.execute("SELECT id, name, password FROM users WHERE email = ?", (email,))
         user = self.app.cursor.fetchone()
 
-        if user and self.verifyPassword(password, user[2]):  # Vérification avec bcrypt
-            self.app.currentUser = (user[0], user[1])  # Stocke uniquement l'ID et le nom
+        if user and self.verifyPassword(password, user[2]):
+            self.app.currentUser = (user[0], user[1])
             self.app.displayMessage(f"✅ Connecté en tant que {user[1]}")
         else:
             self.app.displayMessage("❌ Identifiants incorrects.")
