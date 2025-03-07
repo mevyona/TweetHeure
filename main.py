@@ -6,6 +6,7 @@ import re
 import os
 import bcrypt
 import json
+import sys
 
 class TweetHeureApp:
     def __init__(self, stdscr):
@@ -160,6 +161,7 @@ class TweetHeureApp:
             self.safeAddStr('[P] pour Publier un post\n')
             self.safeAddStr('[V] pour Voir les posts\n')
             self.safeAddStr('[M] pour Commenter un post\n')
+            self.safeAddStr('[Z] pour Modifier la méthode de stockage\n')
             self.safeAddStr('[Q] pour Quitter\n')
             self.stdscr.refresh()
         except curses.error:
@@ -182,11 +184,26 @@ class TweetHeureApp:
                     PostManagement(self).viewPosts()
                 elif key in [ord('M'), ord('m')]:
                     CommentManagement(self).addComment()
+                elif key in [ord('Z'), ord('z')]:
+                    self.changeStorageMode()
                 elif key in [ord('Q'), ord('q')]:
                     break
             except curses.error:
                 continue
         os.system('cls' if os.name == 'nt' else 'clear')
+
+    def changeStorageMode(self):
+        self.displayMessage("Vous allez être déconnecté(e). Appuyez sur [O] pour continuer, [N] pour annuler.")
+        key = self.stdscr.getch()
+        if key in [ord('o'), ord('O')]:
+            if os.path.exists('.session'):
+                os.remove('.session')
+            curses.endwin()
+            curses.wrapper(main)
+        else:
+            self.displayMessage("Opération annulée.")
+            self.stdscr.refresh()
+            self.stdscr.getch()
 
 class UserManagement:
     def __init__(self, app):
@@ -257,7 +274,7 @@ class UserManagement:
 
         if user:
             if self.app.storage_mode == 'sql':
-                stored_pw = user[2]  # Bytes in SQL
+                stored_pw = user[2]
                 if self.verifyPassword(password, stored_pw):
                     self.app.currentUser = (user[0], user[1])
                     self.app.saveSession(user[0])
@@ -265,7 +282,7 @@ class UserManagement:
                 else:
                     self.app.displayMessage("❌ Identifiants incorrects.")
             else:
-                stored_pw = user['password']  # String in JSON
+                stored_pw = user['password']
                 if self.verifyPassword(password, stored_pw.encode()):
                     self.app.currentUser = (user['id'], user['name'])
                     self.app.saveSession(user['id'])
