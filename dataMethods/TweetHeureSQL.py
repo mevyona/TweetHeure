@@ -46,24 +46,24 @@ def getInput(stdscr, prompt):
     safeAddStr(stdscr, prompt)
     stdscr.refresh()
     inputText = ""
-    
+
     while True:
         key = stdscr.getch()
-        
-        if key == 10:
+
+        if key == 10:  # Entrée (valider l'entrée)
             break
-        elif key == 27:
+        elif key == 27:  # Échap (annuler l'entrée)
             inputText = ""
             break
-        elif key == 263:
+        elif key in (curses.KEY_BACKSPACE, 127, 8) and len(inputText) > 0:  # Backspace
             inputText = inputText[:-1]
-        elif 32 <= key <= 126:
+        elif 32 <= key <= 126:  # Lettres, chiffres, caractères imprimables
             inputText += chr(key)
-        
+
         stdscr.clear()
         safeAddStr(stdscr, prompt + inputText)
         stdscr.refresh()
-    
+
     return inputText
 
 def displayMessage(stdscr, message, delay=2000):
@@ -229,6 +229,7 @@ def addComment(stdscr):
 def main(stdscr):
     global currentUser
     curses.curs_set(0)
+    stdscr.keypad(True)
     
     while True:
         try:
