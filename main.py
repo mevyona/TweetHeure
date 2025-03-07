@@ -19,7 +19,9 @@ class TweetHeureApp:
         
     def getStorageMode(self):
         # Demande à l'utilisateur de choisir le mode de stockage (SQL ou JSON)
+        asciiArt = pyfiglet.figlet_format("TweetHeure")
         self.stdscr.clear()
+        self.safeAddStr(asciiArt)
         self.safeAddStr("Choisissez le mode de stockage :\n")
         self.safeAddStr("[S] pour SQL\n")
         self.safeAddStr("[J] pour JSON\n")
@@ -154,9 +156,9 @@ class TweetHeureApp:
             self.safeAddStr('\nBienvenue sur TweetHeure !\n')
 
             if self.currentUser:
-                self.safeAddStr(f'Vous êtes connecté en tant que : {self.currentUser["name"] if isinstance(self.currentUser, dict) else self.currentUser[1]}\n')
+                self.safeAddStr(f'Vous êtes connecté(e) en tant que : {self.currentUser["name"] if isinstance(self.currentUser, dict) else self.currentUser[1]}\n')
             else:
-                self.safeAddStr('Vous n\'êtes pas connecté.\n')
+                self.safeAddStr('Vous n\'êtes pas connecté(e).\n')
 
             self.safeAddStr('Appuyez sur:\n')
             self.safeAddStr('[C] pour Créer un compte\n')
@@ -194,6 +196,7 @@ class TweetHeureApp:
                     break
             except curses.error:
                 continue
+        os.system('cls' if os.name == 'nt' else 'clear')
 
 class UserManagement:
     def __init__(self, app):
@@ -266,7 +269,7 @@ class UserManagement:
         if user and self.verifyPassword(password, user['password'].encode() if self.app.storage_mode == 'json' else user[2]):
             self.app.currentUser = (user[0], user[1]) if self.app.storage_mode == 'sql' else (user['id'], user['name'])
             self.app.saveSession(user['id'] if self.app.storage_mode == 'json' else user[0])
-            self.app.displayMessage(f"✅ Connecté en tant que {user['name'] if self.app.storage_mode == 'json' else user[1]}")
+            self.app.displayMessage(f"✅ connecté(e) en tant que {user['name'] if self.app.storage_mode == 'json' else user[1]}")
         else:
             self.app.displayMessage("❌ Identifiants incorrects.")
         self.app.stdscr.refresh()
@@ -279,7 +282,7 @@ class UserManagement:
             self.app.currentUser = None
             os.remove('.session')
         else:
-            self.app.displayMessage("⚠️ Vous n'êtes pas connecté.")
+            self.app.displayMessage("⚠️ Vous n'êtes pas connecté(e).")
         self.app.stdscr.refresh()
         self.app.stdscr.getch()
 
@@ -292,7 +295,7 @@ class PostManagement:
         # Ajoute un nouveau post
         self.app.stdscr.clear()
         if not self.app.currentUser:
-            self.app.displayMessage("❌ Vous devez être connecté pour publier un post.")
+            self.app.displayMessage("❌ Vous devez être connecté(e) pour publier un post.")
             return
 
         title = self.app.getInput("Titre du post : ")
@@ -362,7 +365,7 @@ class CommentManagement:
         # Ajoute un commentaire à un post
         self.app.stdscr.clear()
         if not self.app.currentUser:
-            self.app.displayMessage("❌ Vous devez être connecté pour commenter.")
+            self.app.displayMessage("❌ Vous devez être connecté(e) pour commenter.")
             return
 
         if self.app.storage_mode == 'sql':
