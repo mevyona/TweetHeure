@@ -17,6 +17,7 @@ class TweetHeureApp:
         self.loadSession()
         
     def getStorageMode(self):
+        # Demande à l'utilisateur de choisir le mode de stockage (SQL ou JSON)
         self.stdscr.clear()
         self.safeAddStr("Choisissez le mode de stockage :\n")
         self.safeAddStr("[S] pour SQL\n")
@@ -32,16 +33,19 @@ class TweetHeureApp:
                 return 'json'
 
     def initSQL(self):
+        # Initialise la base de données SQL
         self.conn = sqlite3.connect("tweetheure.db")
         self.cursor = self.conn.cursor()
         self.createTables()
 
     def initJSON(self):
+        # Initialise le fichier JSON si il n'existe pas
         if not os.path.exists('data.json'):
             with open('data.json', 'w') as f:
                 json.dump({'users': [], 'posts': [], 'comments': []}, f)
 
     def createTables(self):
+        # Crée les tables nécessaires dans la base de données SQL
         self.cursor.executescript(""" 
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +74,7 @@ class TweetHeureApp:
         self.conn.commit()
 
     def loadSession(self):
+        # Charge la session utilisateur si elle existe
         session_file = '.session'
         if os.path.exists(session_file):
             with open(session_file, 'r') as f:
@@ -86,16 +91,19 @@ class TweetHeureApp:
                         self.currentUser = user
 
     def saveSession(self, user_id):
+        # Sauvegarde la session utilisateur
         with open('.session', 'w') as f:
             f.write(str(user_id))
 
     def safeAddStr(self, text):
+        # Ajoute du texte à l'écran en gérant les erreurs de curses
         try:
             self.stdscr.addstr(text)
         except curses.error:
             pass
 
     def getInput(self, prompt):
+        # Demande une entrée utilisateur avec un prompt
         self.stdscr.clear()
         self.safeAddStr(prompt)
         self.stdscr.refresh()
@@ -121,12 +129,14 @@ class TweetHeureApp:
         return inputText
 
     def displayMessage(self, message, delay=2000):
+        # Affiche un message à l'écran pendant un certain délai
         self.stdscr.clear()
         self.safeAddStr(message)
         self.stdscr.refresh()
         curses.napms(delay)
 
     def displayMenu(self):
+        # Affiche le menu principal
         try:
             asciiArt = pyfiglet.figlet_format("TweetHeure")
             self.stdscr.clear()
@@ -152,6 +162,7 @@ class TweetHeureApp:
             pass
 
     def run(self):
+        # Boucle principale de l'application
         while True:
             try:
                 self.displayMenu()
@@ -179,17 +190,21 @@ class UserManagement:
         self.app = app
 
     def isValidEmail(self, email):
+        # Vérifie si l'email est valide
         emailPattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
         return re.match(emailPattern, email) and not re.search(r'[À-ÿ]', email)
 
     def hashPassword(self, password):
+        # Hash le mot de passe avec bcrypt
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode(), salt)
 
     def verifyPassword(self, password, hashedPassword):
+        # Vérifie le mot de passe avec bcrypt
         return bcrypt.checkpw(password.encode(), hashedPassword)
 
     def createAccount(self):
+        # Crée un nouveau compte utilisateur
         self.app.stdscr.clear()
         name = self.app.getInput("Entrez votre nom : ")
         email = self.app.getInput("Entrez votre email : ")
@@ -224,6 +239,7 @@ class UserManagement:
         self.app.stdscr.getch()
 
     def login(self):
+        # Connecte un utilisateur existant
         self.app.stdscr.clear()
         email = self.app.getInput("Entrez votre email : ")
         password = self.app.getInput("Entrez votre mot de passe : ")
@@ -246,6 +262,7 @@ class UserManagement:
         self.app.stdscr.getch()
 
     def logout(self):
+        # Déconnecte l'utilisateur actuel
         if self.app.currentUser:
             self.app.displayMessage(f"👋 Au revoir {self.app.currentUser[1]} !")
             self.app.currentUser = None
@@ -260,6 +277,7 @@ class PostManagement:
         self.app = app
 
     def addPost(self):
+        # Ajoute un nouveau post
         self.app.stdscr.clear()
         if not self.app.currentUser:
             self.app.displayMessage("❌ Vous devez être connecté pour publier un post.")
@@ -281,6 +299,7 @@ class PostManagement:
         self.app.displayMessage("✅ Post ajouté avec succès.")
 
     def viewPosts(self):
+        # Affiche tous les posts
         self.app.stdscr.clear()
         if self.app.storage_mode == 'sql':
             self.app.cursor.execute("SELECT posts.id, users.name, posts.title, posts.content FROM posts JOIN users ON posts.user_id = users.id")
@@ -327,6 +346,7 @@ class CommentManagement:
         self.app = app
 
     def addComment(self):
+        # Ajoute un commentaire à un post
         self.app.stdscr.clear()
         if not self.app.currentUser:
             self.app.displayMessage("❌ Vous devez être connecté pour commenter.")
@@ -385,6 +405,7 @@ class CommentManagement:
         self.app.stdscr.nodelay(True)
 
 def main(stdscr):
+    # Point d'entrée principal de l'application
     app = TweetHeureApp(stdscr)
     app.run()
 
