@@ -78,12 +78,17 @@ class TweetHeureApp:
         session_file = '.session'
         if os.path.exists(session_file):
             with open(session_file, 'r') as f:
-                user_id = f.read().strip()
-                if user_id:
+                session_data = json.load(f)
+                user_id = session_data.get('user_id')
+                storage_mode = session_data.get('storage_mode')
+                if user_id and storage_mode:
+                    self.storage_mode = storage_mode
                     if self.storage_mode == 'sql':
+                        self.initSQL()
                         self.cursor.execute("SELECT id, name FROM users WHERE id = ?", (user_id,))
                         user = self.cursor.fetchone()
                     else:
+                        self.initJSON()
                         with open('data.json', 'r') as f:
                             data = json.load(f)
                             user = next((u for u in data['users'] if u['id'] == int(user_id)), None)
@@ -92,8 +97,12 @@ class TweetHeureApp:
 
     def saveSession(self, user_id):
         # Sauvegarde la session utilisateur
+        session_data = {
+            'user_id': user_id,
+            'storage_mode': self.storage_mode
+        }
         with open('.session', 'w') as f:
-            f.write(str(user_id))
+            json.dump(session_data, f)
 
     def safeAddStr(self, text):
         # Ajoute du texte à l'écran en gérant les erreurs de curses
@@ -144,7 +153,7 @@ class TweetHeureApp:
             self.safeAddStr('\nBienvenue sur TweetHeure !\n')
 
             if self.currentUser:
-                self.safeAddStr(f'Vous êtes connecté en tant que : {self.currentUser[1]}\n')
+                self.safeAddStr(f'Vous êtes connecté en tant que : {self.currentUser["name"] if isinstance(self.currentUser, dict) else self.currentUser[1]}\n')
             else:
                 self.safeAddStr('Vous n\'êtes pas connecté.\n')
 
@@ -253,7 +262,7 @@ class UserManagement:
                 user = next((u for u in data['users'] if u['email'] == email), None)
 
         if user and self.verifyPassword(password, user['password'].encode() if self.app.storage_mode == 'json' else user[2]):
-            self.app.currentUser = (user['id'], user['name'])
+            self.app.currentUser = (user[0], user[1]) if self.app.storage_mode == 'sql' else (user['id'], user['name'])
             self.app.saveSession(user['id'] if self.app.storage_mode == 'json' else user[0])
             self.app.displayMessage(f"✅ Connecté en tant que {user['name'] if self.app.storage_mode == 'json' else user[1]}")
         else:
@@ -264,7 +273,7 @@ class UserManagement:
     def logout(self):
         # Déconnecte l'utilisateur actuel
         if self.app.currentUser:
-            self.app.displayMessage(f"👋 Au revoir {self.app.currentUser[1]} !")
+            self.app.displayMessage(f"👋 Au revoir {self.app.currentUser['name'] if isinstance(self.app.currentUser, dict) else self.app.currentUser[1]} !")
             self.app.currentUser = None
             os.remove('.session')
         else:
