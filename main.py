@@ -31,6 +31,7 @@ class TweetHeureApp:
         self.safeAddStr("[S] pour SQL\n")
         self.safeAddStr("[J] pour JSON\n")
         self.stdscr.refresh()
+        
         while True:
             key = self.stdscr.getch()
             if key in [ord('S'), ord('s')]:
@@ -354,9 +355,9 @@ class PostManagement:
                 data = json.load(f)
             posts = [
                 (post['id'],
-                 next(u['name'] for u in data['users'] if u['id'] == post['user_id']),
-                 post['title'],
-                 post['content'])
+                next(u['name'] for u in data['users'] if u['id'] == post['user_id']),
+                post['title'],
+                post['content'])
                 for post in data['posts']
             ]
 
