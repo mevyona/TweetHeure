@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS comments (
 conn.commit()
 
 currentUser = None
+continueMessage = "Appuyez sur une touche pour continuer..."
 
 def safeAddStr(stdscr, text):
     try:
@@ -184,9 +185,7 @@ def viewPosts(stdscr):
             safeAddStr(stdscr, "   Aucun commentaire\n")
     
     stdscr.refresh()
-    stdscr.nodelay(False)
     stdscr.getch()
-    stdscr.nodelay(True)
 
 def addComment(stdscr):
     global currentUser
@@ -230,7 +229,6 @@ def addComment(stdscr):
 def main(stdscr):
     global currentUser
     curses.curs_set(0)
-    stdscr.timeout(100)
     
     while True:
         try:
