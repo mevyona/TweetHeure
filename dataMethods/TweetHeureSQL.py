@@ -1,6 +1,9 @@
 import sqlite3
 import curses
 import pyfiglet
+import curses.ascii
+import re
+import bcrypt
 
 class TweetHeureApp:
     def __init__(self, stdscr):
@@ -9,11 +12,11 @@ class TweetHeureApp:
         self.cursor = self.conn.cursor()
         self.currentUser = None
         self.continueMessage = "Appuyez sur une touche pour continuer..."
-        self.create_tables()
+        self.createTables()
         curses.curs_set(0)
         self.stdscr.keypad(True)
 
-    def create_tables(self):
+    def createTables(self):
         self.cursor.executescript("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,14 +59,14 @@ class TweetHeureApp:
         while True:
             key = self.stdscr.getch()
 
-            if key == 10:  # Entrée (valider l'entrée)
+            if key == 10:
                 break
-            elif key == 27:  # Échap (annuler l'entrée)
+            elif key == 27:
                 inputText = ""
                 break
-            elif key in (curses.KEY_BACKSPACE, 127, 8) and len(inputText) > 0:  # Backspace
+            elif key in (curses.KEY_BACKSPACE, 127, 8) and len(inputText) > 0:
                 inputText = inputText[:-1]
-            elif 32 <= key <= 126:  # Lettres, chiffres, caractères imprimables
+            elif curses.ascii.isprint(key) or (128 <= key <= 255):
                 inputText += chr(key)
 
             self.stdscr.clear()
@@ -126,22 +129,42 @@ class TweetHeureApp:
             except curses.error:
                 continue
 
+import bcrypt
+
 class UserManagement:
     def __init__(self, app):
         self.app = app
+
+    def isValidEmail(self, email):
+        emailPattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        return re.match(emailPattern, email) and not re.search(r'[À-ÿ]', email)
+
+    def hashPassword(self, password):
+        salt = bcrypt.gensalt()  # Génère un salt sécurisé
+        return bcrypt.hashpw(password.encode(), salt)  # Hashage sécurisé du mot de passe
+
+    def verifyPassword(self, password, hashedPassword):
+        return bcrypt.checkpw(password.encode(), hashedPassword)  # Vérifie si le mot de passe correspond
 
     def createAccount(self):
         self.app.stdscr.clear()
         name = self.app.getInput("Entrez votre nom : ")
         email = self.app.getInput("Entrez votre email : ")
+
+        if not self.isValidEmail(email):
+            self.app.displayMessage("❌ Erreur : Email invalide")
+            return self.createAccount()
+
         password = self.app.getInput("Entrez votre mot de passe : ")
+        hashedPassword = self.hashPassword(password)  # Hashage du mot de passe
 
         try:
-            self.app.cursor.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", (name, email, password))
+            self.app.cursor.execute("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
+                                    (name, email, hashedPassword))
             self.app.conn.commit()
             self.app.displayMessage("✅ Compte créé avec succès !")
         except sqlite3.IntegrityError:
-            self.app.displayMessage("❌ Erreur : Cet email est déjà utilisé.")
+            self.app.displayMessage("❌ Erreur : Utilisateur déjà existant.")
         self.app.stdscr.refresh()
         self.app.stdscr.getch()
 
@@ -150,11 +173,11 @@ class UserManagement:
         email = self.app.getInput("Entrez votre email : ")
         password = self.app.getInput("Entrez votre mot de passe : ")
 
-        self.app.cursor.execute("SELECT id, name FROM users WHERE email = ? AND password = ?", (email, password))
+        self.app.cursor.execute("SELECT id, name, password FROM users WHERE email = ?", (email,))
         user = self.app.cursor.fetchone()
 
-        if user:
-            self.app.currentUser = user
+        if user and self.verifyPassword(password, user[2]):  # Vérification avec bcrypt
+            self.app.currentUser = (user[0], user[1])  # Stocke uniquement l'ID et le nom
             self.app.displayMessage(f"✅ Connecté en tant que {user[1]}")
         else:
             self.app.displayMessage("❌ Identifiants incorrects.")

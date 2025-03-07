@@ -1,3 +1,4 @@
 pyfiglet
 windows-curses
+bcrypt
 curses # Linux
