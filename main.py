@@ -2,7 +2,7 @@ import subprocess
 
 choice = input("Quelle version de stockage de données voulez-vous utiliser ? (SQL/JSON) ").upper()
 
-match choice.upper():
+match choice:
     case "SQL":
         subprocess.run(["python", "./dataMethods/TweetHeureSQL.py"])
     case "JSON":
